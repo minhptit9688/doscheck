@@ -11,19 +11,19 @@ cmd = func.check_hits_Command()
 
 #capture ouput from command line & convert to list IP/Hits
 #proc = subprocess.check_output(cmd, shell=True)
-
 proc = subprocess.check_output("grep -E '26/Oct/2022:09:[0-9]' /Users/phamtuanminh/Desktop/hoangtv/nginx80.access.log | awk '{print $1}' | sort | uniq -c | sort -nr | head -10", shell=True)
 
 output = proc.decode("utf-8")
 item = output.split()
 list_ip = func.IP_Pair(item)
 
+threshold = int(func.getThreshold())
+
 #check if number of hits > 10000 add to banned list, if duplicate ==> print Duplicated IP
 banned_ip = []
 for item in list_ip:
-    if float(item[0]) > 10000:
+    if int(item[0]) > threshold:
         banned_ip.append(item[1])
         func.updateBannedIP(item[1],item[0],now)
 
-print(banned_ip)
 

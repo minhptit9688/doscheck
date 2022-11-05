@@ -1,7 +1,8 @@
 import re
 import time
-from itertools import zip_longest
+import os
 import configparser
+from itertools import zip_longest
 
 def getHomeDir():
     config = configparser.ConfigParser()
@@ -12,6 +13,16 @@ def getBannedIPFile():
     config = configparser.ConfigParser()
     config.read('config.ini')
     return config['ENV']['IP_BAN']
+
+def getFileName():
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    return config['ENV']['FILE_NAME']
+
+def getThreshold():
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    return config['ENV']['THRESHOLD']
 
 #combine 2 elements in a loop
 def IP_Pair(iter):
@@ -41,16 +52,16 @@ def getIpList():
     return data
 
 def check_hits_Command():
-    dir = getHomeDir()
+    dir = getHomeDir()+getFileName()
     now = time.localtime()
     checked = int(time.time()) - 300
     result = time.localtime(checked)
 
     if now.tm_hour > result.tm_hour:
-        cmd = "grep -E '{}/{}/{}:{}:[0-9]' {}nginx80.access.log | awk '{}' | sort | uniq -c | sort -nr | head -10".format(now.tm_mday,now.tm_mon,now.tm_year,now.tm_hour,dir,'print $1')
+        cmd = "grep -E '{}/{}/{}:{}:[0-9]' {} | awk '{}' | sort | uniq -c | sort -nr | head -10".format(now.tm_mday,now.tm_mon,now.tm_year,now.tm_hour,dir,'print $1')
         return cmd
     else:
-        cmd = "grep -E '{}/{}/{}:{}:[0-9]' {}nginx80.access.log | awk '{}' | sort | uniq -c | sort -nr | head -10".format(result.tm_mday,result.tm_mon,result.tm_year,result.tm_hour,dir,"print $1")
+        cmd = "grep -E '{}/{}/{}:{}:[0-9]' {} | awk '{}' | sort | uniq -c | sort -nr | head -10".format(result.tm_mday,result.tm_mon,result.tm_year,result.tm_hour,dir,"print $1")
         return cmd
 
 def checkDuplicatedEntry(ip):
@@ -74,3 +85,10 @@ def updateBannedIP(ip,hits,time):
         with open(file,'a') as f:
             f.write('\t{}\t\t{}\t\t\t{}\n'.format(ip,hits,time))
             f.close()
+
+def banIP(ip):
+    os.system("csf -d "+ip)
+
+def releaseIP(ip):
+#execute release IP from banned list on Linux
+    return True
